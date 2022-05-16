@@ -1,0 +1,41 @@
+# 각각의 서비스들을 위한 틀 만들기
+version: "3"
+services:
+  frontend:
+    build: # 개발환경을 위한 Dockerfile이 어디있는지 명시.
+      dockerfile: Dockerfile.dev
+      context: ./frontend
+    volumes:  # 컨테이너에서 로컬 머신을 참조할 수 있게 해줌(코드를 수정 후 다시 이미지를 build하는 것 없이 수정된 코드가 반영이 될 수 있도록 volume 이용)
+      - /app/node_modules # workding directory가 app으로 시작됨
+      - ./frontend:/app
+    stdin_open: true  # 리액트 앱 종료할 때 나오는 버그 잡아줌
+
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - "3000:80"
+
+  backend:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./backend
+    container_name: app_backend
+    volumes:
+      - /app/node_modules
+      - ./backend:/app
+
+  # mysql:
+  #   build: ./mysql
+  #   restart: unless-stopped
+  #   container_name: app_mysql
+  #   ports:
+  #     - "3307:3306"
+  #   volumes:
+  #     - ./mysql/mysql_data:/var/lib/mysql
+  #     - ./mysql/sqls/:/docker-entrypoint-initdb.d/
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: maro42
+  #     MYSQL_DATABASE: myapp
